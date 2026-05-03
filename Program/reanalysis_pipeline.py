@@ -765,6 +765,46 @@ def problem_15(
     return corrected_shifts, corrected_shift_errs
 
 
+def problem_17(
+    lamp_spectrum: np.ndarray,
+    line_1_range: tuple[int, int] = (36, 47),
+    line_2_range: tuple[int, int] = (1013, 1024),
+    line_1_wavelength: float = 6532.8962,
+    line_2_wavelength: float = 7173.9104,
+) -> tuple[float, float, float]:
+    """Problem 17: Calculate dispersion from two identified lamp lines.
+
+    Fits a Gaussian to each line to find sub-pixel centers, then
+    computes dispersion = Δλ / Δpixel.
+
+    Returns
+    -------
+    dispersion : float
+        Angstroms per pixel.
+    line_1_center : float
+        Sub-pixel center of line 1.
+    line_2_center : float
+        Sub-pixel center of line 2.
+    """
+    from gaussian import fitgaussian
+
+    l1_start, l1_end = line_1_range
+    l2_start, l2_end = line_2_range
+
+    line_1_center = fitgaussian(lamp_spectrum[l1_start:l1_end])[1][0] + l1_start
+    line_2_center = fitgaussian(lamp_spectrum[l2_start:l2_end])[1][0] + l2_start
+
+    dispersion = (line_2_wavelength - line_1_wavelength) / (
+        line_2_center - line_1_center
+    )
+
+    print(f"Line 1 center: {line_1_center:.3f} px  ({line_1_wavelength:.4f} Å)")
+    print(f"Line 2 center: {line_2_center:.3f} px  ({line_2_wavelength:.4f} Å)")
+    print(f"Dispersion: {dispersion:.6f} Å/px")
+
+    return dispersion, line_1_center, line_2_center
+
+
 def main():
     """Run the reanalysis pipeline."""
 
@@ -845,6 +885,10 @@ def main():
         good_mask,
         cleaned_ref_idx,
     )
+
+    # Problem 17: calculate dispersion from lamp lines
+    lamp_ref_spectrum = lamp_stripes[lamp_ref_idx]
+    dispersion, line_1_center, line_2_center = problem_17(lamp_ref_spectrum)
 
 
 if __name__ == "__main__":
