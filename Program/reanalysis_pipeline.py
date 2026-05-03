@@ -14,6 +14,7 @@ from pathlib import Path
 import matplotlib.pyplot as plt
 import numpy as np
 from astropy.io import fits
+from cross_correlation import cross_correlate_subpixel
 from project_funcs import save_fits
 
 galaxy_corrected_fp = "FITS/galaxy_corrected.fits"
@@ -317,6 +318,119 @@ def problem_11(
     return lamp_stripes, lamp_ref_idx
 
 
+def problem_12(
+    lamp_stripes: np.ndarray,
+    lamp_ref_idx: int,
+    galaxy_stripes: np.ndarray,
+    galaxy_ref_idx: int,
+):
+    """Problem 12:
+
+    Calculate intrinsic shifts from the lamp, and raw shifts from the galaxy.
+
+    For the lamp: each stripe is cross-correlated against the lamp reference
+    spectrum (at the galaxy center row). These shifts measure the optical
+    distortion of the Double Spectrograph — constant-wavelength lines that
+    curve slightly across the slit. These are a systematic error to be
+    removed from the galaxy shifts.
+
+    For the galaxy: each stripe is cross-correlated against the galaxy
+    reference spectrum. These shifts contain both the intrinsic distortion
+    AND the Doppler signal from galactic rotation. Separating the two
+    comes in Problem 15.
+
+    Parameters
+    ----------
+    lamp_stripes : np.ndarray
+        2D array of median-collapsed lamp spectra (n_stripes × n_wavelengths).
+    lamp_ref_idx : int
+        Index of the lamp reference stripe.
+    galaxy_stripes : np.ndarray
+        2D array of median-collapsed galaxy spectra.
+    galaxy_ref_idx : int
+        Index of the galaxy reference stripe.
+
+    Returns
+    -------
+    lamp_shifts : np.ndarray
+        Intrinsic (optical distortion) shift for each lamp stripe,
+        in original pixel units.
+    lamp_shift_errs : np.ndarray
+        Uncertainties on the lamp shifts.
+    galaxy_shifts : np.ndarray
+        Raw shift for each galaxy stripe relative to the galaxy
+        reference spectrum, in original pixel units.
+    galaxy_shift_errs : np.ndarray
+        Uncertainties on the galaxy shifts.
+    """
+
+    lamp_ref_spectrum = lamp_stripes[lamp_ref_idx]
+    galaxy_ref_spectrum = galaxy_stripes[galaxy_ref_idx]
+
+    n_lamp = lamp_stripes.shape[0]
+    n_galaxy = galaxy_stripes.shape[0]
+
+    # --- Lamp shifts (intrinsic distortion) ---
+    # The lamp lines are constant-wavelength, so any measured shift is
+    # purely instrumental. Shift range of ±10 pixels is generous for
+    # optical distortion which is typically sub-pixel to a few pixels.
+    lamp_shifts = np.zeros(n_lamp)
+    lamp_shift_errs = np.zeros(n_lamp)
+
+    print(f"Calculating lamp intrinsic shifts ({n_lamp} stripes)...")
+    for i in range(n_lamp):
+        shift, err, _, _ = cross_correlate_subpixel(
+            lamp_stripes[i], lamp_ref_spectrum,
+            shift_range=(-10, 10),
+            supersample=10,
+        )
+        lamp_shifts[i] = shift
+        lamp_shift_errs[i] = err
+
+    # Plot lamp shifts
+    plt.figure()
+    plt.plot(lamp_shifts, ".-")
+    plt.axhline(0, color="gray", linewidth=0.5, linestyle="--")
+    plt.title("Lamp Intrinsic Shifts (Optical Distortion)")
+    plt.xlabel("Stripe Index")
+    plt.ylabel("Shift (pixels)")
+    plt.savefig("new_plots/problem_12_lamp_shifts.png")
+
+    print(f"  Lamp shift range: {lamp_shifts.min():.3f} to {lamp_shifts.max():.3f} px")
+    print(f"  Lamp shift at reference: {lamp_shifts[lamp_ref_idx]:.6f} px (should be ~0)")
+
+    # --- Galaxy shifts (Doppler + intrinsic) ---
+    # The galaxy shifts contain both the rotation signal (the S-curve we
+    # want) and the intrinsic distortion (which we'll subtract in Problem 15).
+    # Shift range of ±10 pixels is adequate for the expected Doppler shifts.
+    galaxy_shifts = np.zeros(n_galaxy)
+    galaxy_shift_errs = np.zeros(n_galaxy)
+
+    print(f"Calculating galaxy shifts ({n_galaxy} stripes)...")
+    for i in range(n_galaxy):
+        shift, err, _, _ = cross_correlate_subpixel(
+            galaxy_stripes[i], galaxy_ref_spectrum,
+            shift_range=(-10, 10),
+            supersample=10,
+        )
+        galaxy_shifts[i] = shift
+        galaxy_shift_errs[i] = err
+
+    # Plot galaxy shifts
+    plt.figure()
+    plt.plot(galaxy_shifts, ".-")
+    plt.axhline(0, color="gray", linewidth=0.5, linestyle="--")
+    plt.title("Galaxy Raw Shifts (Doppler + Intrinsic)")
+    plt.xlabel("Stripe Index")
+    plt.ylabel("Shift (pixels)")
+    plt.savefig("new_plots/problem_12_galaxy_shifts.png")
+
+    print(f"  Galaxy shift range: {galaxy_shifts.min():.3f} to {galaxy_shifts.max():.3f} px")
+    print(f"  Galaxy shift at reference: {galaxy_shifts[galaxy_ref_idx]:.6f} px (should be ~0)")
+
+    return lamp_shifts, lamp_shift_errs, galaxy_shifts, galaxy_shift_errs
+
+
 def main():
     """Run the reanalysis pipeline."""
 
@@ -358,6 +472,11 @@ def main():
 
     # Problem 11: stripe the lamp frame for intrinsic shift measurement
     lamp_stripes, lamp_ref_idx = problem_11(lamp_data, zero_velocity_row)
+
+    # Problem 12: calculate intrinsic shifts (lamp) and raw shifts (galaxy)
+    lamp_shifts, lamp_shift_errs, galaxy_shifts, galaxy_shift_errs = problem_12(
+        lamp_stripes, lamp_ref_idx, galaxy_stripes, ref_row_idx
+    )
 
 
 if __name__ == "__main__":
