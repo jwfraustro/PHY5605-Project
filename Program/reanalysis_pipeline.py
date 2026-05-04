@@ -805,6 +805,443 @@ def problem_17(
     return dispersion, line_1_center, line_2_center
 
 
+def problem_18(
+    corrected_shifts: np.ndarray,
+    corrected_shift_errs: np.ndarray,
+    good_mask: np.ndarray,
+    cleaned_ref_idx: int,
+    dispersion: float,
+):
+    """Problem 18:
+
+    Convert pixel shifts to wavelength shifts, then to velocities.
+
+    The Doppler formula: Δλ/λ = v/c, so v = c * Δλ/λ.
+
+    The corrected_shifts are in pixel units. Multiply by dispersion
+    (Å/px) to get Δλ. The reference wavelength λ cancels in the ratio,
+    so we just need: v = c * (shift_pixels * dispersion) / λ_ref.
+
+    But actually, since we're measuring shifts *relative to the galaxy
+    center*, and the center is at the systemic velocity, these velocities
+    are the *rotation velocities* relative to the center — which is
+    exactly what we want for the rotation curve.
+
+    Parameters
+    ----------
+    corrected_shifts : np.ndarray
+        Intrinsic-corrected Doppler shifts in pixels (all stripes).
+    corrected_shift_errs : np.ndarray
+        Uncertainties on the shifts.
+    good_mask : np.ndarray
+        Boolean mask for stripes with galaxy signal.
+    cleaned_ref_idx : int
+        Reference stripe index.
+    dispersion : float
+        Å per pixel from Problem 17.
+
+    Returns
+    -------
+    velocities : np.ndarray
+        Rotation velocities in m/s for all stripes.
+    velocity_errs : np.ndarray
+        Velocity uncertainties in m/s.
+    """
+
+    c = 2.998e8  # m/s
+
+    # Convert pixel shifts to wavelength shifts
+    # Δλ = shift_pixels * dispersion  (in Å)
+    delta_lambda = corrected_shifts * dispersion
+    delta_lambda_err = corrected_shift_errs * dispersion
+
+    # We need a reference wavelength for the Doppler formula.
+    # Any representative wavelength in our spectral range works — the
+    # galaxy's Hα or a strong line. Using the center of our wavelength
+    # range is fine since the dispersion is linear.
+    # From Problem 17, line 1 is at 6532.9 Å and line 2 at 7173.9 Å,
+    # so the center of the spectrum is around 6850 Å.
+    lambda_ref = 6850.0  # Å — approximate center of spectral range
+
+    # v = c * Δλ / λ_ref
+    velocities = c * delta_lambda / lambda_ref
+    velocity_errs = c * delta_lambda_err / lambda_ref
+
+    # Verify center is ~0
+    print(f"Velocity at galaxy center: {velocities[cleaned_ref_idx]:.2f} m/s (should be ~0)")
+
+    # Plot velocities for the good region
+    good_indices = np.where(good_mask)[0]
+    good_offsets = good_indices - cleaned_ref_idx
+
+    plt.figure()
+    plt.errorbar(
+        good_offsets,
+        velocities[good_mask] / 1e3,  # convert to km/s for plotting
+        yerr=velocity_errs[good_mask] / 1e3,
+        fmt=".-",
+        capsize=2,
+    )
+    plt.axhline(0, color="gray", linewidth=0.5, linestyle="--")
+    plt.title("Galaxy Rotation Velocities")
+    plt.xlabel("Stripe Offset from Galaxy Center")
+    plt.ylabel("Rotation Velocity (km/s)")
+    plt.savefig("new_plots/problem_18_velocities.png")
+
+    print(f"Velocity range (good region): "
+          f"{velocities[good_mask].min()/1e3:.1f} to "
+          f"{velocities[good_mask].max()/1e3:.1f} km/s")
+
+    return velocities, velocity_errs
+
+
+def problem_19(
+    velocities: np.ndarray,
+    velocity_errs: np.ndarray,
+    good_mask: np.ndarray,
+    cleaned_ref_idx: int,
+    poly_order: int = 5,
+):
+    """Problem 19:
+
+    Fit a polynomial to the velocities and compute residuals.
+
+    The standard deviation of the residuals is the velocity uncertainty.
+
+    Parameters
+    ----------
+    velocities : np.ndarray
+        Rotation velocities in m/s (all stripes).
+    velocity_errs : np.ndarray
+        Velocity uncertainties.
+    good_mask : np.ndarray
+        Boolean mask for good stripes.
+    cleaned_ref_idx : int
+        Reference stripe index.
+    poly_order : int
+        Order of the polynomial fit.
+
+    Returns
+    -------
+    velocity_std : float
+        Standard deviation of the velocity residuals (m/s).
+    poly_coeffs : np.ndarray
+        Polynomial coefficients from the fit.
+    """
+
+    good_indices = np.where(good_mask)[0]
+    good_offsets = good_indices - cleaned_ref_idx
+    good_velocities = velocities[good_mask]
+
+    # Fit polynomial
+    poly_coeffs = np.polyfit(good_offsets, good_velocities, poly_order)
+    poly_fit = np.polyval(poly_coeffs, good_offsets)
+    residuals = good_velocities - poly_fit
+    velocity_std = np.std(residuals)
+
+    print(f"Polynomial order: {poly_order}")
+    print(f"Velocity residual std: {velocity_std/1e3:.2f} km/s")
+
+    # Plot residuals
+    plt.figure()
+    plt.plot(good_offsets, residuals / 1e3, ".-")
+    plt.axhline(0, color="gray", linewidth=0.5, linestyle="--")
+    plt.title(f"Velocity Residuals (order-{poly_order} fit)")
+    plt.xlabel("Stripe Offset from Galaxy Center")
+    plt.ylabel("Residual (km/s)")
+    plt.savefig("new_plots/problem_19_residuals.png")
+
+    # Also plot the fit over the data
+    plt.figure()
+    plt.errorbar(
+        good_offsets,
+        good_velocities / 1e3,
+        yerr=velocity_errs[good_mask] / 1e3,
+        fmt=".-",
+        capsize=2,
+        label="Data",
+    )
+    plt.plot(good_offsets, poly_fit / 1e3, "r-", linewidth=2, label=f"Order-{poly_order} fit")
+    plt.axhline(0, color="gray", linewidth=0.5, linestyle="--")
+    plt.legend()
+    plt.title("Velocity Curve with Polynomial Fit")
+    plt.xlabel("Stripe Offset from Galaxy Center")
+    plt.ylabel("Rotation Velocity (km/s)")
+    plt.savefig("new_plots/problem_19_velocity_fit.png")
+
+    return velocity_std, poly_coeffs
+
+
+def problem_20():
+    """Problem 20:
+
+    Calculate distance to the galaxy using Hubble's law.
+
+    Returns
+    -------
+    galaxy_dist_mpc : float
+        Distance in Mpc.
+    """
+
+    redshift_velocity = 10100.0  # km/s (systemic redshift of UGC 9039)
+    hubble_const = 67.0  # km/s/Mpc
+
+    galaxy_dist_mpc = redshift_velocity / hubble_const
+
+    print(f"Systemic redshift: {redshift_velocity:.0f} km/s")
+    print(f"Hubble constant: {hubble_const:.0f} km/s/Mpc")
+    print(f"Distance to galaxy: {galaxy_dist_mpc:.1f} Mpc")
+
+    return galaxy_dist_mpc
+
+
+def problem_21(
+    good_mask: np.ndarray,
+    cleaned_ref_idx: int,
+    galaxy_dist_mpc: float,
+    ccd_scale: float,
+    stripe_size: int = 5,
+):
+    """Problem 21:
+
+    Convert stripe offsets to physical radii in kpc.
+
+    Using the CCD spatial scale (arcsec/pixel), distance to the galaxy,
+    and the small-angle approximation: d = D * θ, where θ is in radians.
+
+    Each stripe is `stripe_size` pixels tall, so the angular offset
+    per stripe is stripe_size * ccd_scale arcseconds.
+
+    Parameters
+    ----------
+    good_mask : np.ndarray
+        Boolean mask for good stripes.
+    cleaned_ref_idx : int
+        Reference stripe index.
+    galaxy_dist_mpc : float
+        Distance to galaxy in Mpc.
+    ccd_scale : float
+        Arcseconds per pixel from the FITS header.
+    stripe_size : int
+        Pixels per stripe.
+
+    Returns
+    -------
+    radii_kpc : np.ndarray
+        Physical radius for each stripe in kpc (all stripes).
+    radius_err_kpc : np.ndarray
+        Radius uncertainty in kpc (from 0.5 pixel uncertainty).
+    """
+
+    arcsec_per_radian = 206265.0
+    kpc_per_mpc = 1000.0
+
+    n_stripes = len(good_mask)
+    stripe_offsets = np.arange(n_stripes) - cleaned_ref_idx
+
+    # Angular offset in arcseconds, then radians
+    theta_arcsec = stripe_offsets * stripe_size * ccd_scale
+    theta_rad = theta_arcsec / arcsec_per_radian
+
+    # Physical distance: d = D * θ
+    galaxy_dist_kpc = galaxy_dist_mpc * kpc_per_mpc
+    radii_kpc = galaxy_dist_kpc * theta_rad
+
+    # Radius uncertainty from 0.5 pixel position uncertainty
+    pixel_uncertainty = 0.5
+    theta_err_rad = pixel_uncertainty * ccd_scale / arcsec_per_radian
+    radius_err_kpc = galaxy_dist_kpc * theta_err_rad * np.ones(n_stripes)
+
+    good_indices = np.where(good_mask)[0]
+    good_offsets = good_indices - cleaned_ref_idx
+    good_radii = radii_kpc[good_mask]
+
+    print(f"CCD scale: {ccd_scale:.4f} arcsec/pixel")
+    print(f"Radius range: {good_radii.min():.2f} to {good_radii.max():.2f} kpc")
+    print(f"Radius uncertainty: ±{radius_err_kpc[0]:.3f} kpc")
+
+    # Plot
+    plt.figure()
+    plt.errorbar(
+        good_offsets,
+        good_radii,
+        yerr=radius_err_kpc[good_mask],
+        fmt=".-",
+        capsize=2,
+    )
+    plt.title("Galaxy Radial Distances")
+    plt.xlabel("Stripe Offset from Galaxy Center")
+    plt.ylabel("Radius (kpc)")
+    plt.savefig("new_plots/problem_21_radii.png")
+
+    return radii_kpc, radius_err_kpc
+
+
+def problem_22(
+    velocities: np.ndarray,
+    velocity_errs: np.ndarray,
+    radii_kpc: np.ndarray,
+    radius_err_kpc: np.ndarray,
+    good_mask: np.ndarray,
+    cleaned_ref_idx: int,
+):
+    """Problem 22:
+
+    Calculate enclosed mass as a function of radius.
+
+    For circular orbits: M(r) = v² r / G
+
+    Parameters
+    ----------
+    velocities : np.ndarray
+        Rotation velocities in m/s.
+    velocity_errs : np.ndarray
+        Velocity uncertainties in m/s.
+    radii_kpc : np.ndarray
+        Radii in kpc.
+    radius_err_kpc : np.ndarray
+        Radius uncertainties in kpc.
+    good_mask : np.ndarray
+        Boolean mask for good stripes.
+    cleaned_ref_idx : int
+        Reference stripe index.
+
+    Returns
+    -------
+    mass_enclosed : np.ndarray
+        Enclosed mass in kg for all stripes.
+    mass_err : np.ndarray
+        Mass uncertainty in kg.
+    """
+
+    G = 6.674e-11  # m³ kg⁻¹ s⁻²
+    kpc_to_m = 3.086e19  # meters per kpc
+
+    radii_m = radii_kpc * kpc_to_m
+    radius_err_m = radius_err_kpc * kpc_to_m
+
+    # M = v² r / G
+    mass_enclosed = velocities**2 * abs(radii_m) / G
+
+    # Error propagation: M = v² r / G
+    # δM/M = sqrt( (2 δv/v)² + (δr/r)² )
+    # Be careful with division by zero at the center (r=0, v=0)
+    with np.errstate(divide="ignore", invalid="ignore"):
+        mass_err = np.abs(mass_enclosed) * np.sqrt(
+            (2 * velocity_errs / np.where(velocities != 0, velocities, 1.0))**2
+            + (radius_err_m / np.where(radii_m != 0, radii_m, 1.0))**2
+        )
+    # Zero out the center point where everything is degenerate
+    center_stripe = cleaned_ref_idx
+    mass_err[center_stripe] = 0.0
+
+    good_radii = radii_kpc[good_mask]
+    good_mass = mass_enclosed[good_mask]
+    good_mass_err = mass_err[good_mask]
+
+    # Convert to solar masses for readability
+    M_sun = 1.989e30  # kg
+    print(f"Enclosed mass range: {good_mass.min()/M_sun:.2e} to {good_mass.max()/M_sun:.2e} M_sun")
+
+    # Plot mass vs radius
+    plt.figure()
+    plt.errorbar(
+        good_radii,
+        good_mass / M_sun,
+        yerr=good_mass_err / M_sun,
+        fmt=".-",
+        capsize=2,
+    )
+    plt.title("Enclosed Mass vs. Galactic Radius")
+    plt.xlabel("Radius (kpc)")
+    plt.ylabel("Enclosed Mass (M☉)")
+    plt.savefig("new_plots/problem_22_mass_enclosed.png")
+
+    return mass_enclosed, mass_err
+
+
+def problem_23(
+    velocities: np.ndarray,
+    velocity_errs: np.ndarray,
+    radii_kpc: np.ndarray,
+    radius_err_kpc: np.ndarray,
+    good_mask: np.ndarray,
+    cleaned_ref_idx: int,
+    dispersion: float,
+    galaxy_dist_mpc: float,
+    ccd_scale: float,
+    velocity_std: float,
+):
+    """Problem 23:
+
+    Calculate uncertainty on enclosed mass using full error propagation.
+
+    M = v² r / G
+
+    The full error propagation equation:
+
+        σ_M² = (∂M/∂v)² σ_v²  +  (∂M/∂r)² σ_r²
+
+    where:
+        ∂M/∂v = 2vr/G
+        ∂M/∂r = v²/G
+
+    So:
+        σ_M = (1/G) √( (2vr σ_v)² + (v² σ_r)² )
+
+    This is equivalent to what Problem 22 already computes, but here
+    we use the velocity residual std from Problem 19 as a more robust
+    velocity uncertainty estimate, and we print/plot it explicitly as
+    the assignment requests.
+
+    Returns
+    -------
+    mass_err_full : np.ndarray
+        Full error-propagated mass uncertainty in kg.
+    """
+
+    G = 6.674e-11
+    kpc_to_m = 3.086e19
+    M_sun = 1.989e30
+
+    radii_m = radii_kpc * kpc_to_m
+    radius_err_m = radius_err_kpc * kpc_to_m
+
+    # Use the velocity residual std as the velocity uncertainty
+    # (more robust than the per-point Gaussian fit uncertainty)
+    v_err = velocity_std
+
+    # σ_M = (1/G) √( (2vr σ_v)² + (v² σ_r)² )
+    mass_err_full = (1.0 / G) * np.sqrt(
+        (2 * velocities * radii_m * v_err)**2
+        + (velocities**2 * radius_err_m)**2
+    )
+
+    good_radii = radii_kpc[good_mask]
+    good_mass = velocities[good_mask]**2 * radii_m[good_mask] / G
+    good_mass_err = mass_err_full[good_mask]
+
+    print(f"Velocity uncertainty (from residuals): {v_err/1e3:.2f} km/s")
+    print(f"Mass uncertainty range: {good_mass_err.min()/M_sun:.2e} to "
+          f"{good_mass_err.max()/M_sun:.2e} M_sun")
+
+    # Plot mass with full error bars
+    plt.figure()
+    plt.errorbar(
+        good_radii,
+        good_mass / M_sun,
+        yerr=good_mass_err / M_sun,
+        fmt=".-",
+        capsize=2,
+    )
+    plt.title("Enclosed Mass with Full Error Propagation")
+    plt.xlabel("Radius (kpc)")
+    plt.ylabel("Enclosed Mass (M☉)")
+    plt.savefig("new_plots/problem_23_mass_with_errors.png")
+
+    return mass_err_full
+
+
 def main():
     """Run the reanalysis pipeline."""
 
@@ -889,6 +1326,41 @@ def main():
     # Problem 17: calculate dispersion from lamp lines
     lamp_ref_spectrum = lamp_stripes[lamp_ref_idx]
     dispersion, line_1_center, line_2_center = problem_17(lamp_ref_spectrum)
+
+    # Problem 18: convert shifts to velocities
+    velocities, velocity_errs = problem_18(
+        corrected_shifts, corrected_errs, good_mask, cleaned_ref_idx, dispersion,
+    )
+
+    # Problem 19: fit polynomial, calculate residuals
+    velocity_std, poly_coeffs = problem_19(
+        velocities, velocity_errs, good_mask, cleaned_ref_idx,
+    )
+
+    # Problem 20: distance to galaxy
+    galaxy_dist_mpc = problem_20()
+
+    # Problem 21: convert to physical radii
+    # We need the CCD scale from the FITS header. Since we don't have the
+    # original raw FITS headers, we hardcode it from the original run.
+    # The DBSP red camera has CCDSCALE in the header.
+    ccd_scale = 0.468  # arcsec/pixel — from original FITS header
+    radii_kpc, radius_err_kpc = problem_21(
+        good_mask, cleaned_ref_idx, galaxy_dist_mpc, ccd_scale,
+    )
+
+    # Problem 22: enclosed mass
+    mass_enclosed, mass_err = problem_22(
+        velocities, velocity_errs, radii_kpc, radius_err_kpc,
+        good_mask, cleaned_ref_idx,
+    )
+
+    # Problem 23: full error propagation on mass
+    mass_err_full = problem_23(
+        velocities, velocity_errs, radii_kpc, radius_err_kpc,
+        good_mask, cleaned_ref_idx, dispersion, galaxy_dist_mpc,
+        ccd_scale, velocity_std,
+    )
 
 
 if __name__ == "__main__":
