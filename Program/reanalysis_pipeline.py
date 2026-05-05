@@ -80,8 +80,8 @@ def problem_8(galaxy_data: np.ndarray):
 
     # By visual inspection of the median profile, the galaxy flux region spans roughly rows 50–250.
     # These are used later to identify which stripes contain galaxy signal vs. sky.
-    lower_flux_limit = 50
-    upper_flux_limit = 250
+    lower_flux_limit = 75
+    upper_flux_limit = 200
 
     print(
         f"Galaxy Region Lower/Upper Flux Limits: {lower_flux_limit}, {upper_flux_limit}"
@@ -1212,13 +1212,16 @@ def problem_23(
     v_err = velocity_std
 
     # σ_M = (1/G) √( (2vr σ_v)² + (v² σ_r)² )
+    # The squares make the sign of r irrelevant in the error,
+    # but use |r| for the mass itself for physical correctness.
+    abs_radii_m = np.abs(radii_m)
     mass_err_full = (1.0 / G) * np.sqrt(
-        (2 * velocities * radii_m * v_err)**2
+        (2 * velocities * abs_radii_m * v_err)**2
         + (velocities**2 * radius_err_m)**2
     )
 
-    good_radii = radii_kpc[good_mask]
-    good_mass = velocities[good_mask]**2 * radii_m[good_mask] / G
+    good_radii = np.abs(radii_kpc[good_mask])
+    good_mass = velocities[good_mask]**2 * abs_radii_m[good_mask] / G
     good_mass_err = mass_err_full[good_mask]
 
     print(f"Velocity uncertainty (from residuals): {v_err/1e3:.2f} km/s")
@@ -1240,6 +1243,209 @@ def problem_23(
     plt.savefig("new_plots/problem_23_mass_with_errors.png")
 
     return mass_err_full
+
+
+def problem_24(
+    galaxy_data: np.ndarray,
+    velocities: np.ndarray,
+    velocity_errs: np.ndarray,
+    radii_kpc: np.ndarray,
+    mass_enclosed: np.ndarray,
+    mass_err_full: np.ndarray,
+    good_mask: np.ndarray,
+    cleaned_ref_idx: int,
+    zero_velocity_row: int,
+    lower_flux_limit: int,
+    upper_flux_limit: int,
+):
+    """Problem 24: Demonstrate the existence of dark matter.
+
+    Two complementary lines of evidence:
+
+    1. The rotation curve. For a self-gravitating system where mass
+       traces light, the rotation velocity should fall off (roughly
+       Keplerian) once we're outside the bulk of the luminous matter.
+       A *flat* rotation curve at large radius means mass is still
+       being added beyond where light is — that's dark matter.
+
+    2. Mass-to-light comparison. The enclosed luminous mass is
+       proportional to the cumulative integrated light along the slit.
+       If M_dynamical(r) / L(r) is constant, mass and light agree.
+       If M_dynamical/L rises with r, dark matter is dominating at
+       large radii.
+
+    Parameters
+    ----------
+    galaxy_data : np.ndarray
+        The trimmed galaxy frame (used for the light profile).
+    velocities : np.ndarray
+        Per-stripe rotation velocities in m/s.
+    velocity_errs : np.ndarray
+        Velocity uncertainties.
+    radii_kpc : np.ndarray
+        Per-stripe physical radii in kpc.
+    mass_enclosed : np.ndarray
+        Per-stripe enclosed dynamical mass in kg (uses |radius|).
+    mass_err_full : np.ndarray
+        Mass uncertainty in kg.
+    good_mask : np.ndarray
+        Boolean mask of stripes containing galaxy signal.
+    cleaned_ref_idx : int
+        Reference stripe index (galaxy center).
+    zero_velocity_row : int
+        Galaxy center row in trimmed-frame coordinates.
+    lower_flux_limit, upper_flux_limit : int
+        Flux region bounds from Problem 8 (trimmed-frame coordinates).
+    """
+
+    M_sun = 1.989e30  # kg
+
+    # ----- Folded rotation curve -----
+    # Take the absolute value of radius so both sides of the galaxy
+    # land on the same positive axis. If the galaxy is symmetric, the
+    # two halves should overlap.
+    good_idx = np.where(good_mask)[0]
+    abs_radii = np.abs(radii_kpc[good_mask])
+    abs_velocities = np.abs(velocities[good_mask])
+    side = np.sign(good_idx - cleaned_ref_idx)  # -1 = approaching, +1 = receding
+
+    plt.figure()
+    for s, label, marker in [(-1, "Approaching side", "o"), (+1, "Receding side", "s")]:
+        mask = side == s
+        plt.errorbar(
+            abs_radii[mask],
+            abs_velocities[mask] / 1e3,
+            yerr=velocity_errs[good_mask][mask] / 1e3,
+            fmt=marker, capsize=2, label=label, alpha=0.7,
+        )
+    plt.title("Folded Rotation Curve")
+    plt.xlabel("|Radius| (kpc)")
+    plt.ylabel("|Rotation Velocity| (km/s)")
+    plt.legend()
+    plt.savefig("new_plots/problem_24_rotation_curve_folded.png")
+
+    # ----- Luminous mass profile from the galaxy's light -----
+    # The 1D light profile is the median along the wavelength axis,
+    # restricted to the galaxy flux region. We assume the galaxy emits
+    # uniformly per unit luminous mass (constant M/L), so the cumulative
+    # light enclosed within radius r is proportional to enclosed
+    # luminous mass.
+    #
+    # We then normalize this to match the dynamical mass at small radius
+    # (where dark matter contribution is minimal and luminous mass
+    # dominates). The ratio M_dyn(r) / M_lum(r) at large r is then
+    # the dark matter signature.
+
+    # Light profile: median along wavelength axis
+    light_profile = np.median(galaxy_data, axis=1)
+    # Restrict to galaxy flux region and subtract the local sky baseline
+    # so we're integrating only the galaxy contribution.
+    sky_baseline = np.median(
+        np.concatenate([
+            light_profile[max(0, lower_flux_limit - 20):lower_flux_limit],
+            light_profile[upper_flux_limit:min(len(light_profile), upper_flux_limit + 20)],
+        ])
+    )
+    light_galaxy_only = np.maximum(light_profile - sky_baseline, 0.0)
+
+    # For each "good" stripe, compute the cumulative light from the galaxy
+    # center outward to that stripe's row.
+    # Stripe i covers rows centered on:
+    #   row_center = zero_velocity_row + (i - cleaned_ref_idx) * stripe_size
+    stripe_size = 5
+    stripe_row_centers = (
+        zero_velocity_row + (np.arange(len(good_mask)) - cleaned_ref_idx) * stripe_size
+    )
+
+    cum_light = np.zeros(len(good_mask))
+    for i in range(len(good_mask)):
+        # Cumulative light from galaxy center out to this stripe (absolute)
+        r_low = min(zero_velocity_row, stripe_row_centers[i])
+        r_high = max(zero_velocity_row, stripe_row_centers[i]) + 1
+        r_low = max(r_low, 0)
+        r_high = min(r_high, len(light_galaxy_only))
+        cum_light[i] = light_galaxy_only[r_low:r_high].sum()
+
+    # Normalize the luminous mass to match the dynamical mass at the
+    # innermost good radius where both are nonzero. This sets M/L.
+    # We pick the smallest |radius| good stripe with significant signal.
+    abs_r_good = np.abs(radii_kpc)
+    inner_candidates = np.where(good_mask & (abs_r_good > 1.0) & (cum_light > 0))[0]
+    if len(inner_candidates) == 0:
+        print("Could not find a good inner stripe to normalize M/L. Skipping.")
+        return
+
+    # Use the inner ~25% of good radii as the normalization region
+    inner_cutoff = np.percentile(abs_r_good[good_mask], 25)
+    inner_mask = good_mask & (abs_r_good <= inner_cutoff) & (abs_r_good > 1.0) & (cum_light > 0)
+    if inner_mask.sum() == 0:
+        inner_mask = np.zeros_like(good_mask)
+        inner_mask[inner_candidates[0]] = True
+
+    M_over_L = np.median(mass_enclosed[inner_mask] / cum_light[inner_mask])
+    luminous_mass = M_over_L * cum_light
+
+    print(f"\nDark matter analysis:")
+    print(f"  Inner normalization region: |r| ≤ {inner_cutoff:.2f} kpc")
+    print(f"  Mass-to-light ratio (inner, normalized): {M_over_L:.3e} kg per count")
+
+    # ----- Compare dynamical and luminous mass profiles -----
+    plt.figure()
+    plt.errorbar(
+        abs_radii,
+        mass_enclosed[good_mask] / M_sun,
+        yerr=mass_err_full[good_mask] / M_sun,
+        fmt="o", capsize=2, label="Dynamical mass (from rotation)", alpha=0.7,
+    )
+    plt.plot(
+        abs_radii,
+        luminous_mass[good_mask] / M_sun,
+        "r-", linewidth=2, label="Luminous mass (constant M/L)",
+    )
+    plt.title("Dynamical vs. Luminous Enclosed Mass")
+    plt.xlabel("|Radius| (kpc)")
+    plt.ylabel("Enclosed Mass (M☉)")
+    plt.yscale("log")
+    plt.legend()
+    plt.savefig("new_plots/problem_24_mass_comparison.png")
+
+    # ----- Mass excess (dark matter contribution) vs. radius -----
+    # The "dark mass" is what's left after subtracting the luminous mass.
+    # If dynamical = luminous everywhere, dark mass is zero.
+    dark_mass = mass_enclosed - luminous_mass
+    plt.figure()
+    plt.errorbar(
+        abs_radii,
+        dark_mass[good_mask] / M_sun,
+        yerr=mass_err_full[good_mask] / M_sun,
+        fmt="o-", capsize=2,
+    )
+    plt.axhline(0, color="gray", linewidth=0.5, linestyle="--")
+    plt.title("Mass Excess Beyond Luminous Component")
+    plt.xlabel("|Radius| (kpc)")
+    plt.ylabel("Excess Mass (M☉)")
+    plt.savefig("new_plots/problem_24_dark_mass.png")
+
+    # ----- Dark matter fraction at largest radius -----
+    # Find the outermost good stripes on each side
+    outer_mask = good_mask & (abs_r_good > np.percentile(abs_r_good[good_mask], 75))
+    if outer_mask.sum() > 0:
+        f_dm_outer = np.median(
+            (mass_enclosed[outer_mask] - luminous_mass[outer_mask])
+            / mass_enclosed[outer_mask]
+        )
+        print(f"  Dark matter fraction at large radius (outer 25%): {f_dm_outer:.2%}")
+
+    # Significance test: is the outer mass excess significantly above zero?
+    if outer_mask.sum() > 0:
+        excess = mass_enclosed[outer_mask] - luminous_mass[outer_mask]
+        excess_err = mass_err_full[outer_mask]
+        weighted_excess = np.sum(excess / excess_err**2) / np.sum(1.0 / excess_err**2)
+        weighted_excess_err = np.sqrt(1.0 / np.sum(1.0 / excess_err**2))
+        sigma = weighted_excess / weighted_excess_err
+        print(f"  Outer mass excess: ({weighted_excess/M_sun:.2e} ± "
+              f"{weighted_excess_err/M_sun:.2e}) M_sun")
+        print(f"  Detection significance: {sigma:.1f}σ")
 
 
 def main():
@@ -1360,6 +1566,13 @@ def main():
         velocities, velocity_errs, radii_kpc, radius_err_kpc,
         good_mask, cleaned_ref_idx, dispersion, galaxy_dist_mpc,
         ccd_scale, velocity_std,
+    )
+
+    # Problem 24: demonstrate dark matter
+    problem_24(
+        galaxy_data, velocities, velocity_errs, radii_kpc,
+        mass_enclosed, mass_err_full, good_mask, cleaned_ref_idx,
+        zero_velocity_row, lower_flux, upper_flux,
     )
 
 
