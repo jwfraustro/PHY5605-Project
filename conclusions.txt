@@ -1,0 +1,76 @@
+CONCLUSION 1:
+\section{Conclusions}
+The rotation curve of UGC 9039 has been recovered from the same calibration products available to \citet{fraustro} in 2019, and the dark matter content of the galaxy is detected at 20σ20\sigma
+20σ significance. The data did not change. The galaxy did not change. What changed was the analysis.
+
+This is, on its face, an unremarkable result. The presence of dark matter in spiral galaxies has been established for half a century; the techniques used here — long-slit spectroscopy, sub-pixel cross-correlation, Gaussian peak fitting, Keplerian mass estimation — are standard. UGC 9039 is not, to the present author's knowledge, a galaxy of particular astrophysical interest. The data were obtained in 2002 \citep{catinella} for purposes that did not include this paper. No new physics is reported here.
+
+What the present work does demonstrate is the difference made by four corrections to a pipeline that, in its original form, was not quite finished. The cross-correlation routine was rewritten to use the sub-pixel resolution it had already paid for. The Doppler velocity formula was corrected to compute vv
+v rather than c+vc+v
+c+v. The sky subtraction was improved to account for the optical distortion it had previously ignored. Errors were propagated. Each of these is a small fix. None requires new data, new instruments, or new theoretical insight. Together, they convert an inconclusive student project into a measurement.
+
+It is tempting, in the conclusion of a paper like this, to extract a moral. The present author has resisted this for several drafts and will largely continue to. Two observations seem worth making, however.
+
+The first is that the original analysis was not wrong because its author lacked the requisite knowledge. The relevant equations, methods, and tooling were all present in the original work; the cross-correlation function had been built with sub-pixel recovery in mind, the spline interpolation had been performed correctly, and the Doppler shift relation had been written down accurately in the methods text of \cite{fraustro}, even as the implementation in the code computed something else entirely. The errors were errors of execution under time pressure, not of understanding. This is, the present author suspects, the modal failure mode of student work, and possibly of a non-trivial fraction of professional work as well\footnote{The present author having now seen both.}.
+
+The second is that the original analysis was correct in the one respect that mattered most: \cite{fraustro} declined to claim a result it could not support. The error analysis section consisted of an explicit acknowledgment that no error analysis had been performed, and the conclusions were stated with appropriate uncertainty. This is a habit the present author would like to retroactively commend, and prospectively maintain.
+
+The dataset is now considered, by the present author, to be closed. Whether the present author will return to it in another seven years to find further errors in this paper is left as a matter for that future author to determine.
+\begin{acknowledgements}
+
+The author thanks Dr. J. Harrington for the original assignment, the patience extended during its initial submission, and the IDL conventions that made the original code structure what it was. The author also thanks Dr. B. Catinella and collaborators for the original observations, taken with no anticipation of their use in this context. Finally, the author thanks his former self for committing the reduced products to version control, an act of unwarranted foresight to which the present work owes its existence.
+\end{acknowledgements}
+
+CONCLUSION 2:
+\section{Conclusions}
+The reanalysis presented here recovers the rotation curve of UGC 9039 at sub-pixel precision, detects a dark matter excess of (2.37±0.12)×1011 M⊙(2.37 \pm 0.12) \times 10^{11}\,M_\odot
+(2.37±0.12)×1011M⊙​ in the outer 25\% of the galaxy's measured radius at a significance of 20σ20\sigma
+20σ, and corresponds to a dark matter fraction of 92.8%92.8\%
+92.8% at large radius. The conclusion that \cite{fraustro} declined to draw is now drawn: UGC 9039 contains dark matter, and the dataset on which this conclusion rests was, in fact, sufficient to support it in 2019.
+
+The errors that prevented the original analysis from reaching this conclusion were not errors of measurement, instrumentation, or data quality. They were errors of implementation, made by an author working against a deadline who, when faced with the choice between a correct routine and one that would terminate before submission, made the rational choice. The data was correct. The calibration was correct. The conceptual approach was, in nearly every section, correct. The cross-correlation routine was a few lines of Gaussian fitting away from working, the velocity formula was a single arithmetic operation away from being right, and the error analysis was an afternoon of work away from existing. The 2019 author knew, at some level, that all three of these were true.
+
+The interpretation of this is left as an exercise to the present author, working in the considerable luxury of hindsight\footnote{And, it should be said, the considerable luxury of having since learned to read his own code carefully enough to find these errors, an aptitude that scales somewhat with the consequence of having previously not.}.
+
+What makes UGC 9039 a useful test case, beyond the personal, is that it demonstrates the recoverability of a real astrophysical signal from a dataset whose original analysis was, at the level of the published numbers, an unmitigated failure. The bias frames, dome flats, and bias-subtracted galaxy and lamp products from \cite{fraustro} were not the limiting factor. The pipeline downstream of the basic CCD calibration was. This is, perhaps, a useful piece of evidence in the longstanding question of how much published-but-failed analyses can be salvaged given access to the original reduction products and someone willing to read the code with fresh eyes. In this case: substantially.
+
+It would be inappropriate to close without acknowledging the original instructor of AST5765C, Dr. Joseph Harrington, whose course materials, lecture handouts, and \texttt{gaussian.py} module are used unmodified in the present work, and whose pedagogical insistence on careful error propagation is here belatedly honored. The present author also acknowledges his 2019 self, who, to his credit, committed the reduced data products to version control before the analysis went sideways, and who declined to make definitive claims about results he had reason to suspect were wrong. Both of these decisions, in retrospect, were the correct ones, and made the present work possible.
+
+The author further notes that, in the years since the original submission, he has had occasion to reflect on the difference between code that works and code that is correct, and on the related observation that the former is a much weaker condition than is typically appreciated. The original \texttt{project_jfraust.py} ran to completion. It produced figures. It generated numbers. None of these facts had any bearing on whether the numbers were right, and several of them — the smooth-looking velocity curve, the plausible-looking radial extent — actively obscured the fact that the numbers were not. The present reanalysis is offered, in part, as a small piece of evidence for the proposition that one should not trust a pipeline merely because it terminates.
+UGC 9039 contains dark matter. It contained dark matter in 2019, and in 2002, and for some considerable time before that. Only the analysis was lacking.
+
+CONCLUSION 3:
+\section{Conclusions}
+UGC 9039 contains dark matter. The rotation curve is recovered cleanly across ±20\pm 20
+±20\,kpc, the velocity residuals are well-behaved, the enclosed mass profile diverges from the luminous mass profile at the radii where it is expected to do so, and the divergence is significant at 20σ20\sigma
+20σ. 
+
+None of this is novel; the galaxy was identified as a dark matter-bearing rotator long before the data analyzed here were taken, and the dataset itself was selected for an undergraduate assignment precisely because it was expected to yield this result. The contribution of the present work is therefore not the detection itself, but the recovery of a detection that was, in 2019, sitting inside the same dataset, awaiting only an analysis pipeline that did what its author had intended for it to do.
+
+The errors that prevented the original analysis from succeeding were not, in retrospect, conceptually difficult. The cross-correlation routine needed a Gaussian fit to its peak — a technique the original author was familiar with, had implemented for other problems in the same script, and had clearly intended to use here. The Doppler formula needed a single arithmetic correction. The error propagation needed to be performed at all. None of these fixes required any technique unavailable to a graduate student in 2019, and none required information the original author did not have. What they required was time, attention, and the willingness to read one's own code carefully enough to notice what it was doing rather than what it was meant to do.
+
+The present author has had occasion, in the seven years since, to learn this lesson in a number of professional contexts. It is not, on reflection, a lesson that is ever fully learned; it is one that re-presents itself in new forms with some regularity. The 2019 version of this analysis was a graduate student writing code under time pressure with insufficient sleep and the conviction that the next compounding error would be the last one. The 2026 version is a professional astronomer who has, in the intervening years, written a great deal more code, in a great deal more contexts, and has acquired a corresponding appreciation for the value of writing it slowly. Both versions of the author would benefit from being told, by someone with sufficient authority to be heeded, to take a break and come back tomorrow. Neither would have listened.
+
+It is also noted, with the benefit of hindsight, that the original work was not a failure in the sense that matters most. The original author identified the correct conclusion, identified the correct evidence for that conclusion, identified the principal sources of error preventing that evidence from being conclusive, and declined to overstate the result in the absence of a proper uncertainty analysis. These are the components of a defensible scientific paper, present and correctly assembled, on a deadline, by someone who had not yet learned to extend themselves the patience the work deserved. The result was inconclusive, but the reasoning was sound. The present author is, with the benefit of distance, willing to give the original author rather more credit than the original author was willing to give themselves.
+
+The dataset is now closed. The galaxy rotates, the dark matter is present at 20σ20\sigma
+20σ, and the project that has lived in the back of the present author's mind for seven years is, at last, finished. The author thanks Prof. J. Harrington for assigning it, for the patience displayed during its original submission, and for the quiet good sense of having designed an assignment whose data could withstand a return visit nearly a decade later.
+
+CONCLUSION 4:
+
+\section{Conclusions}
+UGC 9039 contains dark matter. The rotation curve is recovered cleanly across $\pm 20\,\text{kpc}$, and the dark matter content of the galaxy is detected at $20\sigma$ significance.
+
+No new physics is reported here. The galaxy was identified as a dark matter-bearing rotator long before the data analyzed here were taken in 2002 \citep{catinella}. The contribution of the present work is the recovery of a detection that was, in 2019, sitting inside the exact same dataset, awaiting only an analysis pipeline that did what its author intended, and an author willing to write one.
+
+The data did not change. The conceptual approach did not change. UGC 9039 certainly did not change. What changed was the execution. The cross-correlation routine was a few lines of Gaussian fitting away from working, the velocity formula was a single arithmetic operation away from being right, and the error analysis was an afternoon of work away from existing. The 2019 author knew, at some level, that all three of these were true. None of these fixes required new theoretical insight or techniques unavailable to an undergraduate student; they merely required time, attention, and a willingness to see what the code was actually doing, rather than what it was meant to do.
+
+In the years since the original submission, the author has had occasion to reflect on the difference between code that works and code that is correct. The original pipeline ran to completion. It produced figures and numbers. None of these facts had any bearing on whether the numbers were right, and the smooth-looking velocity curve actively obscured the fact that they were not. The present reanalysis is offered, in part, as evidence for the proposition that one should not trust a pipeline merely because it terminates.
+
+The 2019 version of this analysis was written under extreme time pressure, fueled by caffeine and necessity, with the conviction that the next compounding error would be the last. The 2026 version is written by a professional developer who has acquired a deep, consequential appreciation for the value of writing code slowly. Both versions of the author would benefit from being told, by someone with sufficient authority to be heeded, to take a break and come back tomorrow. Neither would have listened.
+
+Yet, the original work succeeded in the one respect that mattered most: the author declined to fake a definitive claim to mask a failing pipeline. The original error analysis consisted of an explicit acknowledgment that no error analysis had been performed. The numbers were wrong, the physics was mangled, but the scientific reasoning was sound.
+
+The dataset is now closed. The galaxy rotates, the dark matter is present at  20$\sigma$, and the project that has lived in the back of the present author's mind for seven years is, at last, finished.
+
+The author thanks Dr. J. Harrington -- Joe -- for the original assignment, the patience extended during its initial submission, and the pedagogical insistence on careful error propagation that is here belatedly honored. Finally, the author thanks his former self for committing the reduced products to version control before things went entirely sideways—an act of unwarranted foresight to which the present work owes its existence.
