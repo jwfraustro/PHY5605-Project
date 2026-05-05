@@ -544,6 +544,7 @@ def problem_13(
     plt.xlabel("Wavelength Pixel")
     plt.ylabel("Row")
     plt.savefig("new_plots/problem_13_galaxy_cleaned.png")
+    plt.imsave("new_plots/problem_13_galaxy_sub_sky.png", galaxy_cleaned, cmap="gray")
 
     return galaxy_cleaned
 
@@ -868,7 +869,9 @@ def problem_18(
     velocity_errs = c * delta_lambda_err / lambda_ref
 
     # Verify center is ~0
-    print(f"Velocity at galaxy center: {velocities[cleaned_ref_idx]:.2f} m/s (should be ~0)")
+    print(
+        f"Velocity at galaxy center: {velocities[cleaned_ref_idx]:.2f} m/s (should be ~0)"
+    )
 
     # Plot velocities for the good region
     good_indices = np.where(good_mask)[0]
@@ -888,9 +891,11 @@ def problem_18(
     plt.ylabel("Rotation Velocity (km/s)")
     plt.savefig("new_plots/problem_18_velocities.png")
 
-    print(f"Velocity range (good region): "
-          f"{velocities[good_mask].min()/1e3:.1f} to "
-          f"{velocities[good_mask].max()/1e3:.1f} km/s")
+    print(
+        f"Velocity range (good region): "
+        f"{velocities[good_mask].min()/1e3:.1f} to "
+        f"{velocities[good_mask].max()/1e3:.1f} km/s"
+    )
 
     return velocities, velocity_errs
 
@@ -961,7 +966,9 @@ def problem_19(
         capsize=2,
         label="Data",
     )
-    plt.plot(good_offsets, poly_fit / 1e3, "r-", linewidth=2, label=f"Order-{poly_order} fit")
+    plt.plot(
+        good_offsets, poly_fit / 1e3, "r-", linewidth=2, label=f"Order-{poly_order} fit"
+    )
     plt.axhline(0, color="gray", linewidth=0.5, linestyle="--")
     plt.legend()
     plt.title("Velocity Curve with Polynomial Fit")
@@ -1128,8 +1135,8 @@ def problem_22(
     # Be careful with division by zero at the center (r=0, v=0)
     with np.errstate(divide="ignore", invalid="ignore"):
         mass_err = np.abs(mass_enclosed) * np.sqrt(
-            (2 * velocity_errs / np.where(velocities != 0, velocities, 1.0))**2
-            + (radius_err_m / np.where(radii_m != 0, radii_m, 1.0))**2
+            (2 * velocity_errs / np.where(velocities != 0, velocities, 1.0)) ** 2
+            + (radius_err_m / np.where(radii_m != 0, radii_m, 1.0)) ** 2
         )
     # Zero out the center point where everything is degenerate
     center_stripe = cleaned_ref_idx
@@ -1141,7 +1148,9 @@ def problem_22(
 
     # Convert to solar masses for readability
     M_sun = 1.989e30  # kg
-    print(f"Enclosed mass range: {good_mass.min()/M_sun:.2e} to {good_mass.max()/M_sun:.2e} M_sun")
+    print(
+        f"Enclosed mass range: {good_mass.min()/M_sun:.2e} to {good_mass.max()/M_sun:.2e} M_sun"
+    )
 
     # Plot mass vs radius
     plt.figure()
@@ -1216,17 +1225,19 @@ def problem_23(
     # but use |r| for the mass itself for physical correctness.
     abs_radii_m = np.abs(radii_m)
     mass_err_full = (1.0 / G) * np.sqrt(
-        (2 * velocities * abs_radii_m * v_err)**2
-        + (velocities**2 * radius_err_m)**2
+        (2 * velocities * abs_radii_m * v_err) ** 2
+        + (velocities**2 * radius_err_m) ** 2
     )
 
     good_radii = np.abs(radii_kpc[good_mask])
-    good_mass = velocities[good_mask]**2 * abs_radii_m[good_mask] / G
+    good_mass = velocities[good_mask] ** 2 * abs_radii_m[good_mask] / G
     good_mass_err = mass_err_full[good_mask]
 
     print(f"Velocity uncertainty (from residuals): {v_err/1e3:.2f} km/s")
-    print(f"Mass uncertainty range: {good_mass_err.min()/M_sun:.2e} to "
-          f"{good_mass_err.max()/M_sun:.2e} M_sun")
+    print(
+        f"Mass uncertainty range: {good_mass_err.min()/M_sun:.2e} to "
+        f"{good_mass_err.max()/M_sun:.2e} M_sun"
+    )
 
     # Plot mass with full error bars
     plt.figure()
@@ -1316,7 +1327,10 @@ def problem_24(
             abs_radii[mask],
             abs_velocities[mask] / 1e3,
             yerr=velocity_errs[good_mask][mask] / 1e3,
-            fmt=marker, capsize=2, label=label, alpha=0.7,
+            fmt=marker,
+            capsize=2,
+            label=label,
+            alpha=0.7,
         )
     plt.title("Folded Rotation Curve")
     plt.xlabel("|Radius| (kpc)")
@@ -1341,10 +1355,14 @@ def problem_24(
     # Restrict to galaxy flux region and subtract the local sky baseline
     # so we're integrating only the galaxy contribution.
     sky_baseline = np.median(
-        np.concatenate([
-            light_profile[max(0, lower_flux_limit - 20):lower_flux_limit],
-            light_profile[upper_flux_limit:min(len(light_profile), upper_flux_limit + 20)],
-        ])
+        np.concatenate(
+            [
+                light_profile[max(0, lower_flux_limit - 20) : lower_flux_limit],
+                light_profile[
+                    upper_flux_limit : min(len(light_profile), upper_flux_limit + 20)
+                ],
+            ]
+        )
     )
     light_galaxy_only = np.maximum(light_profile - sky_baseline, 0.0)
 
@@ -1377,7 +1395,9 @@ def problem_24(
 
     # Use the inner ~25% of good radii as the normalization region
     inner_cutoff = np.percentile(abs_r_good[good_mask], 25)
-    inner_mask = good_mask & (abs_r_good <= inner_cutoff) & (abs_r_good > 1.0) & (cum_light > 0)
+    inner_mask = (
+        good_mask & (abs_r_good <= inner_cutoff) & (abs_r_good > 1.0) & (cum_light > 0)
+    )
     if inner_mask.sum() == 0:
         inner_mask = np.zeros_like(good_mask)
         inner_mask[inner_candidates[0]] = True
@@ -1385,7 +1405,7 @@ def problem_24(
     M_over_L = np.median(mass_enclosed[inner_mask] / cum_light[inner_mask])
     luminous_mass = M_over_L * cum_light
 
-    print(f"\nDark matter analysis:")
+    print("\nDark matter analysis:")
     print(f"  Inner normalization region: |r| ≤ {inner_cutoff:.2f} kpc")
     print(f"  Mass-to-light ratio (inner, normalized): {M_over_L:.3e} kg per count")
 
@@ -1395,12 +1415,17 @@ def problem_24(
         abs_radii,
         mass_enclosed[good_mask] / M_sun,
         yerr=mass_err_full[good_mask] / M_sun,
-        fmt="o", capsize=2, label="Dynamical mass (from rotation)", alpha=0.7,
+        fmt="o",
+        capsize=2,
+        label="Dynamical mass (from rotation)",
+        alpha=0.7,
     )
     plt.plot(
         abs_radii,
         luminous_mass[good_mask] / M_sun,
-        "r-", linewidth=2, label="Luminous mass (constant M/L)",
+        "r-",
+        linewidth=2,
+        label="Luminous mass (constant M/L)",
     )
     plt.title("Dynamical vs. Luminous Enclosed Mass")
     plt.xlabel("|Radius| (kpc)")
@@ -1418,7 +1443,8 @@ def problem_24(
         abs_radii,
         dark_mass[good_mask] / M_sun,
         yerr=mass_err_full[good_mask] / M_sun,
-        fmt="o-", capsize=2,
+        fmt="o-",
+        capsize=2,
     )
     plt.axhline(0, color="gray", linewidth=0.5, linestyle="--")
     plt.title("Mass Excess Beyond Luminous Component")
@@ -1443,8 +1469,10 @@ def problem_24(
         weighted_excess = np.sum(excess / excess_err**2) / np.sum(1.0 / excess_err**2)
         weighted_excess_err = np.sqrt(1.0 / np.sum(1.0 / excess_err**2))
         sigma = weighted_excess / weighted_excess_err
-        print(f"  Outer mass excess: ({weighted_excess/M_sun:.2e} ± "
-              f"{weighted_excess_err/M_sun:.2e}) M_sun")
+        print(
+            f"  Outer mass excess: ({weighted_excess/M_sun:.2e} ± "
+            f"{weighted_excess_err/M_sun:.2e}) M_sun"
+        )
         print(f"  Detection significance: {sigma:.1f}σ")
 
 
@@ -1535,12 +1563,19 @@ def main():
 
     # Problem 18: convert shifts to velocities
     velocities, velocity_errs = problem_18(
-        corrected_shifts, corrected_errs, good_mask, cleaned_ref_idx, dispersion,
+        corrected_shifts,
+        corrected_errs,
+        good_mask,
+        cleaned_ref_idx,
+        dispersion,
     )
 
     # Problem 19: fit polynomial, calculate residuals
     velocity_std, poly_coeffs = problem_19(
-        velocities, velocity_errs, good_mask, cleaned_ref_idx,
+        velocities,
+        velocity_errs,
+        good_mask,
+        cleaned_ref_idx,
     )
 
     # Problem 20: distance to galaxy
@@ -1552,27 +1587,49 @@ def main():
     # The DBSP red camera has CCDSCALE in the header.
     ccd_scale = 0.468  # arcsec/pixel — from original FITS header
     radii_kpc, radius_err_kpc = problem_21(
-        good_mask, cleaned_ref_idx, galaxy_dist_mpc, ccd_scale,
+        good_mask,
+        cleaned_ref_idx,
+        galaxy_dist_mpc,
+        ccd_scale,
     )
 
     # Problem 22: enclosed mass
     mass_enclosed, mass_err = problem_22(
-        velocities, velocity_errs, radii_kpc, radius_err_kpc,
-        good_mask, cleaned_ref_idx,
+        velocities,
+        velocity_errs,
+        radii_kpc,
+        radius_err_kpc,
+        good_mask,
+        cleaned_ref_idx,
     )
 
     # Problem 23: full error propagation on mass
     mass_err_full = problem_23(
-        velocities, velocity_errs, radii_kpc, radius_err_kpc,
-        good_mask, cleaned_ref_idx, dispersion, galaxy_dist_mpc,
-        ccd_scale, velocity_std,
+        velocities,
+        velocity_errs,
+        radii_kpc,
+        radius_err_kpc,
+        good_mask,
+        cleaned_ref_idx,
+        dispersion,
+        galaxy_dist_mpc,
+        ccd_scale,
+        velocity_std,
     )
 
     # Problem 24: demonstrate dark matter
     problem_24(
-        galaxy_data, velocities, velocity_errs, radii_kpc,
-        mass_enclosed, mass_err_full, good_mask, cleaned_ref_idx,
-        zero_velocity_row, lower_flux, upper_flux,
+        galaxy_data,
+        velocities,
+        velocity_errs,
+        radii_kpc,
+        mass_enclosed,
+        mass_err_full,
+        good_mask,
+        cleaned_ref_idx,
+        zero_velocity_row,
+        lower_flux,
+        upper_flux,
     )
 
 
