@@ -823,11 +823,6 @@ def problem_18(
     (Å/px) to get Δλ. The reference wavelength λ cancels in the ratio,
     so we just need: v = c * (shift_pixels * dispersion) / λ_ref.
 
-    But actually, since we're measuring shifts *relative to the galaxy
-    center*, and the center is at the systemic velocity, these velocities
-    are the *rotation velocities* relative to the center — which is
-    exactly what we want for the rotation curve.
-
     Parameters
     ----------
     corrected_shifts : np.ndarray

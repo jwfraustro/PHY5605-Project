@@ -101,7 +101,7 @@
     \label{fig:doppler_shifts}
     \end{figure*}
 
-   The resulting Doppler shift measurements \ref{fig:doppler_shifts} are smooth, sub-pixel-resolved, and free of the staircase quantization that characterized the original work. The shift uncertainties propagated through the velocity and mass calculations are the dominant contribution to the final uncertainty on the dark matter mass measurement.
+   The resulting Doppler shift measurements Fig.~\ref{fig:doppler_shifts} are smooth, sub-pixel-resolved, and free of the staircase quantization that characterized the original work. The shift uncertainties propagated through the velocity and mass calculations are the dominant contribution to the final uncertainty on the dark matter mass measurement.
 
    \subsection{Sky Subtraction and Velocity Corrections}\label{meth_sky_sub}
 
@@ -168,7 +168,7 @@ Cross-correlation of each galaxy stripe against the reference spectrum yielded D
          \label{fig:velocity_fit}
    \end{figure}
 
-The dispersion was calibrated using two NeAr arc lamp lines: a line at $6532.90\,\text{\AA}$ centered at pixel $40.00$, and a line at $7173.91\,\text{\AA}$ centered at pixel $1017.63$, yielding a dispersion of $0.6557\,\text{\AA}\,\text{pixel}^{-1}$. Doppler shifts were converted to line-of-sight velocities via $v = c\,\Delta\lambda/\lambda$, with $\lambda$ evaluated at the galaxy systemic wavelength. The velocity at the reference stripe is $0.00\,\text{km}\,\text{s}^{-1}$, confirming the formula is correctly zeroed. The rotation curve spans $-277.0$ to $+247.7\,\text{km}\,\text{s}^{-1}$ across the measured radius, shown in Fig.~\ref{fig:velocity_fit}. A fifth-order polynomial fit to the rotation curve yields residuals with a standard deviation of $13.75\,\text{km}\,\text{s}^{-1}$, which is adopted as $\sigma_v$ throughout the error propagation.
+The dispersion was calibrated using two NeAr arc lamp lines: a line at $6532.90\,\text{\AA}$ centered at pixel $40.00$, and a line at $7173.91\,\text{\AA}$ centered at pixel $1017.63$, yielding a dispersion of $0.6557\,\text{\AA}\,\text{pixel}^{-1}$. Doppler shifts were converted to line-of-sight velocities via $v = c\,\Delta\lambda/\lambda$, with $\lambda$ evaluated at the galaxy systemic wavelength. The reference wavelength \AA is taken as the midpoint of the two calibration lines, $\AA = (6532.90 + 7173.91)/2 = 6852.9\AA$ which falls near the center of the spectral range. The velocity at the reference stripe is $0.00\,\text{km}\,\text{s}^{-1}$, confirming the formula is correctly zeroed. The rotation curve spans $-277.0$ to $+247.7\,\text{km}\,\text{s}^{-1}$ across the measured radius, shown in Fig.~\ref{fig:velocity_fit}. A fifth-order polynomial fit to the rotation curve yields residuals with a standard deviation of $13.75\,\text{km}\,\text{s}^{-1}$, which is adopted as $\sigma_v$ throughout the error propagation.
 
 \subsection{Galactic Radius and Enclosed Mass}
 The physical radius at each stripe was computed from the CCD plate scale of $0.468\,\text{arcsec}\,\text{pixel}^{-1}$, a galaxy distance of $150.7\,\text{Mpc}$ derived from the systemic redshift of $10{,}100\,\text{km}\,\text{s}^{-1}$ and $H_0 = 67\,\text{km}\,\text{s}^{-1}\,\text{Mpc}^{-1}$, and the small-angle approximation. The measured radius spans $\pm 20.52\,\text{kpc}$, consistent with the earlier result of \citet{fraustro} and within the expected range for a spiral galaxy of this type \citep{catinella}. The stripe positional uncertainty of $\pm 0.5$ pixels corresponds to a radius uncertainty of $\pm 0.171\,\text{kpc}$.
@@ -192,7 +192,7 @@ To isolate the dark matter component, the dynamically inferred enclosed mass was
     \label{fig:mass_comparison}
 \end{figure*}
 
-In the outer 25\% of the measured radial extent, the dynamical mass exceeds the luminous mass profile by $(2.37 \pm 0.12) \times 10^{11}\,M_\odot$, corresponding to a dark matter fraction of 92.8\% at large radius. The detection significance is $20.0\sigma$. The mass comparison is shown in Fig.~\ref{fig:mass_comparison}.
+In the outer 25\% of the measured radial extent (beyond $\approx 15.4\,\text{kpc}$) the dynamical mass exceeds the luminous mass profile by $(2.37 \pm 0.12) \times 10^{11}\,M_\odot$, corresponding to a dark matter fraction of 92.8\% at large radius. The detection significance is $20.0\sigma$. The mass comparison is shown in Fig.~\ref{fig:mass_comparison}.
 
 The flat rotation curve at large radius seen in Fig.~\ref{fig:velocity_fit},the feature that \citet{fraustro} correctly identified as suggestive of non-Keplerian dynamics, but could not quantify, is now resolved at sub-pixel precision and confirmed at high significance.
 
