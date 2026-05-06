@@ -1,4 +1,4 @@
-\documentclass{aa}
+\documentclass{aa}  
 
 \usepackage{graphicx}
 \usepackage{txfonts}
@@ -18,7 +18,7 @@
    \institute{Space Telescope Science Institute, Baltimore, Maryland
    \\\email{jfraustro@stsci.edu}
    }
-
+   
 
    \date{\today}
 
@@ -26,7 +26,7 @@
   % === Context ===
    {The original analysis of these data, presented in \citet{fraustro} as a final project for AST5765C at the University of Central Florida, reached an inconclusive result regarding the structure of UGC 9039 and the presence of dark matter within. In the intervening years, the present author has continued to think about the dataset with a frequency that, on reflection, is difficult to justify. The original analysis is now revisited under significantly more luxurious time constraints than the 48-hour window in which it was first attempted, and in a state of significantly improved sobriety.}
     % === Aims ===
-   {We aim to recover the rotation curve of UGC 9039, demonstrate the presence of dark matter of quantifiable significance, and address the methodological errors that prevented the original work from doing either.}
+   {We aim to recover the rotation curve of UGC 9039, demonstrate the presence of dark matter of quantifiable significance, and address the methodological errors that prevented the original work from doing either.} 
     % === Methods ===
    {Using the bias-subtracted, flat-fielded calibration products from the original reduction, we reconstruct the full analysis pipeline downstream of the basic CCD corrections. The principal sources of error in \citet{fraustro} are identified and corrected: (i) the cross-correlation routine, which previously discarded sub-pixel information by taking the integer argmax of the correlation function, is replaced with one that interpolates onto a 10× finer grid and fits a Gaussian to the correlation peak, recovering shifts to $\approx 10^{-3}$ pixel precision; (ii) the Doppler velocity formula, which previously computed $c(1 + \Delta\lambda/\lambda)$ rather than $c\Delta\lambda/\lambda$, is corrected, eliminating the spurious $\approx3×10^{8}$ m/s offset; (iii) full error propagation is performed throughout, an exercise omitted from the original work. Sky subtraction is improved by shifting the background spectrum to account for the optical distortion of the Double Spectrograph at each slit position.}
   % === Results ===
@@ -55,7 +55,7 @@
     This work re-implements the analysis pipeline downstream of the bias and flat-field corrections, retaining the original calibration products. The corrections to the cross-correlation routine and the Doppler formula rectify the signal into a smooth, sub-pixel-resolved rotation curve. With proper error propagation, the dark matter content of UGC 9039 is then recovered.
 
     It is noted that the present author has had occasion, in the 7 years since \cite{fraustro}, to develop an appreciation for reading one's own code carefully, and allowing proper time when approaching problems.
-
+    
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Methods}
 
@@ -138,25 +138,26 @@
     The derivation of this equation is left as an exercise to the reader\footnote{See Harrington's AST5765C lecture handout, Chap.7 Sec.7 Error Propagation Equation}.
 
     The velocity uncertainty $\sigma_v=13.75\,\text{km}\,\text{s}^{-1}$ is the dominant term at all measured radii. The radius uncertainty $\sigma_r=0.171\,\text{kpc}$ contributes negligibly by comparison, as the stripe positional uncertainty is small relative to the physical scale of the galaxy. The resulting mass uncertainties are shown overplotted on the enclosed mass profile in Fig.~\ref{fig:mass_errors}.
-
+    
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Results}
 \subsection{Stripe Reduction and Reference Spectrum}\label{res_stripes}
 The bias-subtracted, flat-fielded galaxy frame was trimmed to 250 rows following removal of the 15-pixel edge margins, and divided into 49 spatial stripes of 5 rows each. The galaxy center, identified as the row of peak median flux in the spatial profile, falls at row 124 of the trimmed frame. The reference spectrum, the stripe centered on the galaxy nucleus, is stripe 24, the median stripe by construction. The lamp frame was reduced identically, yielding 49 stripes with the reference at the same index.
 
+    \begin{figure}
+        \centering
+        \includegraphics[width=0.75\linewidth]{old_figures/lamp_spectrum_shifts.png}
+        \includegraphics[width=0.75\linewidth]{figures/problem_12_lamp_shifts.png}
+        \caption{Intrinsic lamp shifts in \citet{fraustro} vs the reanalysis.}
+        \label{fig:lamp_shifts}
+    \end{figure}
+
 \subsection{Intrinsic Shift Correction}\label{res_shifts}
 Cross-correlation of each lamp stripe against the reference lamp stripe yielded intrinsic optical distortion shifts ranging from $0.000$ to $0.464$ pixels across the slit. The shift at the reference stripe is $0.000$ pixels by construction, confirming the implementation is self-consistent. Galaxy stripe shifts ranged from $-0.253$ to $0.528$ pixels. The average intrinsic shift measured in the sky region was $0.259$ pixels. These sub-pixel shifts, inaccessible to the integer cross-correlation of \citet{fraustro}, are the primary motivation for the corrected implementation.
 
-\begin{figure}
-    \centering
-    \includegraphics[width=\linewidth]{figures/problem_13_galaxy_sub_sky.png}
-      \caption{Galaxy frame, with sky subtraction.}
-    \label{fig:galaxy_cleaned}
-\end{figure}
-
 
 \subsection{Sky Subtraction}\label{res_skysub}
-The sky background was sampled from rows 185–249 of the trimmed galaxy frame, a 65-row region selected to lie beyond the extent of detectable galaxy flux. The 1D sky spectrum was spline-interpolated and shifted by the optically distortion-corrected amount at each slit position prior to subtraction, as described in Section~\ref{meth_sky_sub} The cleaned galaxy frame is shown in Fig.~\ref{fig:galaxy_cleaned}.
+The sky background was sampled from rows 185–249 of the trimmed galaxy frame, a 65-row region selected to lie beyond the extent of detectable galaxy flux. The 1D sky spectrum was spline-interpolated and shifted by the optically distortion-corrected amount at each slit position prior to subtraction, as described in Section~\ref{meth_sky_sub}
 
 \subsection{Doppler Shifts and Rotation Curve}\label{res_doppler}
 Cross-correlation of each galaxy stripe against the reference spectrum yielded Doppler shifts for all 49 stripes, of which 25 contain detectable galaxy flux. The shift at the reference stripe is $0.000$ pixels, again by construction. The corrected shifts, shown in Fig.~\ref{fig:doppler_shifts}, exhibit the smooth S-shaped antisymmetry expected of a rotating disk, free of the integer-quantization staircase visible in the equivalent figure of \citet{fraustro}.
@@ -185,16 +186,16 @@ Enclosed mass was computed via the Kepler relation $M(r) = v^2 r / G$, with unce
 \subsection{Dark Matter Detection}
 To isolate the dark matter component, the dynamically inferred enclosed mass was compared against a luminous mass profile derived from the galaxy's own flux distribution, normalized in the inner region ($|r| \leq 5.13\,\text{kpc}$) where baryonic matter is expected to dominate and the rotation curve is rising. The mass-to-light ratio in this normalization region is $2.581 \times 10^{37}\,\text{kg}\,\text{count}^{-1}$.
 
-\begin{figure*}
+\begin{figure}
     \centering
-    \includegraphics[width=0.75\linewidth]{figures/problem_24_mass_comparison.png}
+    \includegraphics[width=\linewidth]{figures/problem_24_mass_comparison.png}
     \caption{Dynamical mass vs. luminous mass profile of UGC 9039.}
     \label{fig:mass_comparison}
-\end{figure*}
+\end{figure}
 
 In the outer 25\% of the measured radial extent (beyond $\approx 15.4\,\text{kpc}$) the dynamical mass exceeds the luminous mass profile by $(2.37 \pm 0.12) \times 10^{11}\,M_\odot$, corresponding to a dark matter fraction of 92.8\% at large radius. The detection significance is $20.0\sigma$. The mass comparison is shown in Fig.~\ref{fig:mass_comparison}.
 
-The flat rotation curve at large radius seen in Fig.~\ref{fig:velocity_fit},the feature that \citet{fraustro} correctly identified as suggestive of non-Keplerian dynamics, but could not quantify, is now resolved at sub-pixel precision and confirmed at high significance.
+The flat rotation curve at large radius seen in Fig.~\ref{fig:velocity_fit},the feature that \citet{fraustro} correctly identified as suggestive of non-Keplerian dynamics, but could not quantify, is now resolved at sub-pixel precision and confirmed at high significance. 
 
 The conclusion that \citet{fraustro} declined to state definitively, citing the absence of error analysis, is here stated: UGC 9039 contains dark matter.
 
@@ -236,7 +237,7 @@ The author thanks Dr. J. Harrington -- Joe -- for the original assignment, the p
 \begin{thebibliography}{}
 
     \bibitem[Fraustro(2019)]{fraustro} Fraustro, J. 2019,
-      Radial Velocity And Dark Matter Analysis of Spiral Galaxy UGC 9039
+      Radial Velocity And Dark Matter Analysis of Spiral Galaxy UGC 9039 
 
     \bibitem[Catinella et al.(2005)]{catinella}
 Catinella, B., Haynes, M. P., \& Giovanelli, R. 2005, AJ, 130, 1037

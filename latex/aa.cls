@@ -425,7 +425,7 @@
 \newcommand*\AANum[1]{\renewcommand*\aa@numarticle{#1}%
 \gdef\@AANum{#1}}
 \newcommand*\@AANum{}
-\newcommand*\aa@numarticle{Article number}
+\newcommand*\aa@numarticle{}
 \newcommand*\doi[1]{%
   \renewcommand*\aa@doi{DOI: #1}%
   \renewcommand*\aa@doifig{#1}%
@@ -451,7 +451,7 @@
   }%
   \copy0%
 }
-\newcommand*\aa@pageof{, page \thepage{}}
+\newcommand*\aa@pageof{page \thepage{}}
 \newcommand*{\aa@publishlink}{\hfil%
  Article published by EDP Sciences%
  \hfil}
@@ -529,7 +529,7 @@
 \newcommand*\aa@manuscriptnamefont{}
 \newcommand*\aa@todayheadboxfont{}
 \newcommand*\aa@msnrheadboxfont{\LARGE\bfseries\smash}
-\newcommand*\aa@textidlineempty{{\slshape A\&A proofs:}\ manuscript no.~\jobname}
+\newcommand*\aa@textidlineempty{{\slshape}\ }
 \newcommand*\aa@idlinefont{}
 \newcommand*\aa@doifont{}
 \newcommand*\aa@copyrightfont{\small}
@@ -2148,7 +2148,7 @@
 % Package required for complexed name figure files
 \RequirePackage{grffile}
 %
-\AtBeginDocument{\renewcommand*\aa@pageof{, page \thepage{}}}
+\AtBeginDocument{\renewcommand*\aa@pageof{page \thepage{}}}
 %
 \endinput
 %%
