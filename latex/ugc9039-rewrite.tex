@@ -134,13 +134,21 @@
 
    \subsection{Cross-correlation and sub-pixel shift recovery}\label{meth_cross_corr}
 
-   The cross-correlation function in the original pipeline was, frankly, an unfinished implementation. The original author had set up the necessary scaffolding for sub-pixel shift recovery, a 10× spline interpolation of the input spectra, padding to handle edge effects, mean-subtraction to ground the signals, but the function returned the integer index of np.argmax over the correlation array. No fit was performed to the correlation peak, no testing of the function was performed against synthetic data with known shifts, no comparison was made between the function's output and the ostensibly continuous spectra it was operating on.
+   The cross-correlation function in the original pipeline was, frankly, an unfinished implementation. The original author had set up the necessary scaffolding for sub-pixel shift recovery, a 10× spline interpolation of the input spectra, padding to handle edge effects, mean-subtraction to ground the signals, but the function returned the integer index of np.argmax over the correlation array. No fit was performed to the correlation peak, no testing of the function was performed against synthetic data with known shifts (Problem 4), no comparison was made between the function's output and the ostensibly continuous spectra it was operating on.
 
     The present author has a clear recollection of this stage of the original work. The intention\footnote{He swears.} had been to fit a Gaussian to the correlation peak, in the manner standard for spectroscopic shift measurement. This was begun, abandoned partway through, deferred until later in the problem set when its absence would presumably become impossible to ignore\footnote{It did.}, and then quietly settled for as the deadline approached.
 
     The corrected implementation does what the original was meant to do. For each pair of spectra, the correlation function is computed over a coarse range of integer-pixel shifts, then refined by interpolating onto a 10× finer grid in the neighborhood of the peak. A Gaussian is fitted to the refined peak using $gaussian.fitgaussian$ routine of Harrington, and the sub-pixel shift is taken as the centroid of that fit. The fit uncertainty is propagated forward as the shift uncertainty. The implementation was tested against synthetic spectra with known shifts of varying magnitudes and signal-to-noise ratios. Shifts are recovered to a precision of approximately $10^{-2}$ pixels, compared to the $10^{0}$ pixel results of the original routine.
 
-   The resulting Doppler shift measurements \ref{dop_shift_curve} are smooth, sub-pixel-resolved, and free of the staircase quantization that characterized the original work. The shift uncertainties propagated through the velocity and mass calculations are the dominant contribution to the final uncertainty on the dark matter mass measurement.
+    \begin{figure*}
+    \centering
+    \includegraphics[width=0.35\linewidth]{old_figures/doppler_shifts_trimmed.png}
+    \includegraphics[width=0.35\linewidth]{figures/problem_14_doppler_shifts_trimmed.png}
+    \caption{The Doppler shifts from \citet{fraustro} vs. re-analysis.}
+    \label{fig:doppler_shifts}
+    \end{figure*}
+
+   The resulting Doppler shift measurements \ref{fig:doppler_shifts} are smooth, sub-pixel-resolved, and free of the staircase quantization that characterized the original work. The shift uncertainties propagated through the velocity and mass calculations are the dominant contribution to the final uncertainty on the dark matter mass measurement.
 
    \subsection{Sky Subtraction and Velocity Corrections}\label{meth_sky_sub}
 
@@ -148,7 +156,7 @@
 
    To correct this, the NeAr arc lamp frame was divided into spatial 'stripes' and cross correlated against a reference stripe at the galaxy center, yielding a trace of the spectrograph's spatial distortion along the slit. The 1D sky background spectrum, taken from a region devoid of galaxy flux, was then spline-interpolated and shifted by the corresponding optical distortion at each row prior to subtraction. The result is a dramatically cleaner extraction of the galaxy's emission, free of residual sky line noise.
 
-    Finally, the translation of spectral shifts to radial velocities to radial velocities was corrected. The original analysis erroneously calculated Doppler velocity using the expression $v = c(1 + \Delta\lambda/\lambda)$, adding the speed of light to the rotation curve and producing the rather alarming $\approx 3 \times 10^8$ m/s systemic velocity reported in \citet{fraustro}\footnote{A discovery which, if accurate, would have comfortably secured a Nobel Prize rather than a B-.}. Replacing this with the standard Doppler approximation, $v = c(\Delta\lambda/\lambda)$, restored the kinematics to the Newtonian regime appropriate for UGC 9039.
+    Finally, the translation of spectral shifts to radial velocities was corrected. The original analysis erroneously calculated Doppler velocity using the expression $v = c(1 + \Delta\lambda/\lambda)$, adding the speed of light to the rotation curve and producing the rather alarming $\approx 3 \times 10^8$ m/s systemic velocity reported in \citet{fraustro}\footnote{A discovery which, if accurate, would have comfortably secured a Nobel Prize rather than a B-.}. Replacing this with the standard Doppler approximation, $v = c(\Delta\lambda/\lambda)$, restored the Newtonian regime kinematics appropriate for UGC 9039.
 
     \subsection{Error Propagation}\label{meth_error_prop}
 
@@ -176,7 +184,7 @@
 
     The derivation of this equation is left as an exercise to the reader\footnote{See Harrington's AST5765C lecture handout, Chap.7 Sec.7 Error Propagation Equation}.
 
-    The velocity uncertainty $\sigma_v=13.75\,\text{km}\,\text{s}^{-1}$ is the dominant term at all measured radii. The radius uncertainty $\sigma_r=0.171\,\text{kpc}$ contributes negligibly by comparison, as the stripe positional uncertainty is small relative to the physical scale of the galaxy. The resulting mass uncertainties are shown overplotted on the enclosed mass profile in \ref{mass_profile_w_uncertainties}.
+    The velocity uncertainty $\sigma_v=13.75\,\text{km}\,\text{s}^{-1}$ is the dominant term at all measured radii. The radius uncertainty $\sigma_r=0.171\,\text{kpc}$ contributes negligibly by comparison, as the stripe positional uncertainty is small relative to the physical scale of the galaxy. The resulting mass uncertainties are shown overplotted on the enclosed mass profile in Fig.~\ref{fig:mass_errors}.
     
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Results}
@@ -186,25 +194,54 @@ The bias-subtracted, flat-fielded galaxy frame was trimmed to 250 rows following
 \subsection{Intrinsic Shift Correction}\label{res_shifts}
 Cross-correlation of each lamp stripe against the reference lamp stripe yielded intrinsic optical distortion shifts ranging from $0.000$ to $0.464$ pixels across the slit. The shift at the reference stripe is $0.000$ pixels by construction, confirming the implementation is self-consistent. Galaxy stripe shifts ranged from $-0.253$ to $0.528$ pixels. The average intrinsic shift measured in the sky region was $0.259$ pixels. These sub-pixel shifts, inaccessible to the integer cross-correlation of \citet{fraustro}, are the primary motivation for the corrected implementation.
 
+\begin{figure}
+    \centering
+    \includegraphics[width=\linewidth]{figures/problem_13_galaxy_sub_sky.png}
+      \caption{Galaxy frame, with sky subtraction.}
+    \label{fig:galaxy_cleaned}
+\end{figure}
+
+
 \subsection{Sky Subtraction}\label{res_skysub}
 The sky background was sampled from rows 185–249 of the trimmed galaxy frame, a 65-row region selected to lie beyond the extent of detectable galaxy flux. The 1D sky spectrum was spline-interpolated and shifted by the optically distortion-corrected amount at each slit position prior to subtraction, as described in Section~\ref{meth_sky_sub} The cleaned galaxy frame is shown in Fig.~\ref{fig:galaxy_cleaned}.
 
 \subsection{Doppler Shifts and Rotation Curve}\label{res_doppler}
 Cross-correlation of each galaxy stripe against the reference spectrum yielded Doppler shifts for all 49 stripes, of which 25 contain detectable galaxy flux. The shift at the reference stripe is $0.000$ pixels, again by construction. The corrected shifts, shown in Fig.~\ref{fig:doppler_shifts}, exhibit the smooth S-shaped antisymmetry expected of a rotating disk, free of the integer-quantization staircase visible in the equivalent figure of \citet{fraustro}.
 
+\begin{figure}
+   \centering
+    \includegraphics[width=\hsize]{figures/problem_19_velocity_fit.png}
+      \caption{The reanalysis galactic velocity with polynomial fit.}
+         \label{fig:velocity_fit}
+   \end{figure}
+
 The dispersion was calibrated using two NeAr arc lamp lines: a line at $6532.90\,\text{\AA}$ centered at pixel $40.00$, and a line at $7173.91\,\text{\AA}$ centered at pixel $1017.63$, yielding a dispersion of $0.6557\,\text{\AA}\,\text{pixel}^{-1}$. Doppler shifts were converted to line-of-sight velocities via $v = c\,\Delta\lambda/\lambda$, with $\lambda$ evaluated at the galaxy systemic wavelength. The velocity at the reference stripe is $0.00\,\text{km}\,\text{s}^{-1}$, confirming the formula is correctly zeroed. The rotation curve spans $-277.0$ to $+247.7\,\text{km}\,\text{s}^{-1}$ across the measured radius, shown in Fig.~\ref{fig:velocity_fit}. A fifth-order polynomial fit to the rotation curve yields residuals with a standard deviation of $13.75\,\text{km}\,\text{s}^{-1}$, which is adopted as $\sigma_v$ throughout the error propagation.
 
 \subsection{Galactic Radius and Enclosed Mass}
 The physical radius at each stripe was computed from the CCD plate scale of $0.468\,\text{arcsec}\,\text{pixel}^{-1}$, a galaxy distance of $150.7\,\text{Mpc}$ derived from the systemic redshift of $10{,}100\,\text{km}\,\text{s}^{-1}$ and $H_0 = 67\,\text{km}\,\text{s}^{-1}\,\text{Mpc}^{-1}$, and the small-angle approximation. The measured radius spans $\pm 20.52\,\text{kpc}$, consistent with the earlier result of \citet{fraustro} and within the expected range for a spiral galaxy of this type \citep{catinella}. The stripe positional uncertainty of $\pm 0.5$ pixels corresponds to a radius uncertainty of $\pm 0.171\,\text{kpc}$.
+
+\begin{figure}
+    \centering
+    \includegraphics[width=\hsize]{figures/problem_23_mass_with_errors.png}
+    \caption{Enclosed mass profile of UGC 9039 with error propagation.}
+    \label{fig:mass_errors}
+\end{figure}
 
 Enclosed mass was computed via the Kepler relation $M(r) = v^2 r / G$, with uncertainties propagated as described in Section~\ref{meth_error_prop}. The enclosed mass ranges from $0$ at the nucleus to $3.33 \times 10^{11}\,M_\odot$ at the outermost measured radius, with mass uncertainties ranging up to $3.48 \times 10^{10}\,M_\odot$. This is a significant improvement from the apparent negative mass that was shown in \citet{fraustro}.\footnote{A discovery which would have earned his second Nobel prize.} The enclosed mass profile with $1\sigma$ uncertainties is shown in Fig.~\ref{fig:mass_errors}.
 
 \subsection{Dark Matter Detection}
 To isolate the dark matter component, the dynamically inferred enclosed mass was compared against a luminous mass profile derived from the galaxy's own flux distribution, normalized in the inner region ($|r| \leq 5.13\,\text{kpc}$) where baryonic matter is expected to dominate and the rotation curve is rising. The mass-to-light ratio in this normalization region is $2.581 \times 10^{37}\,\text{kg}\,\text{count}^{-1}$.
 
-In the outer 25\% of the measured radial extent, the dynamical mass exceeds the luminous mass profile by $(2.37 \pm 0.12) \times 10^{11}\,M_\odot$, corresponding to a dark matter fraction of 92.8\% at large radius. The detection significance is $20.0\sigma$. The mass comparison and dark matter fraction profiles are shown in Figs.~\ref{fig:mass_comparison} and~\ref{fig:dark_fraction}.
+\begin{figure*}
+    \centering
+    \includegraphics[width=0.75\linewidth]{figures/problem_24_mass_comparison.png}
+    \caption{Dynamical mass vs. luminous mass profile of UGC 9039.}
+    \label{fig:mass_comparison}
+\end{figure*}
 
-The flat rotation curve at large radius,the feature that \citet{fraustro} correctly identified as suggestive of non-Keplerian dynamics, but could not quantify, is now resolved at sub-pixel precision and confirmed at high significance. 
+In the outer 25\% of the measured radial extent, the dynamical mass exceeds the luminous mass profile by $(2.37 \pm 0.12) \times 10^{11}\,M_\odot$, corresponding to a dark matter fraction of 92.8\% at large radius. The detection significance is $20.0\sigma$. The mass comparison is shown in Fig.~\ref{fig:mass_comparison}.
+
+The flat rotation curve at large radius seen in Fig.~\ref{fig:velocity_fit},the feature that \citet{fraustro} correctly identified as suggestive of non-Keplerian dynamics, but could not quantify, is now resolved at sub-pixel precision and confirmed at high significance. 
 
 The conclusion that \citet{fraustro} declined to state definitively, citing the absence of error analysis, is here stated: UGC 9039 contains dark matter.
 
