@@ -1,71 +1,27 @@
-%-----------------------------------------------------------------------
-%                                                                 aa.tex
-% AA vers. 9.4, LaTeX class for Astronomy & Astrophysics
-% Demonstration file
-%                                                       (c) EDP Sciences
-%-----------------------------------------------------------------------
-%
-%\documentclass[referee]{aa}    % for a referee version
-%\documentclass[onecolumn]{aa}  % for a paper on 1 column  
-%\documentclass[longauth]{aa}   % for long lists of authors and/or affiliations. 
-                                % This command displays the first eight authors on page 1
-                                % and shift the whole list after the references.
-                                % Ensure to separate each author with the \and command (see below)
-%\documentclass[letter]{aa}     % for the letters
-%\documentclass[bibyear]{aa}    % if the references are not structured
-                                % according to the author-year natbib style
-
-\documentclass{aa}  
+\documentclass{aa}
 
 \usepackage{graphicx}
 \usepackage{txfonts}
 \usepackage{lipsum}
-\usepackage{subcaption}         % necessary for continued figures, example in section 3
-\usepackage{siunitx}            % for \Angstrom symbol
-                                % and appendix
-\usepackage{lscape}             % to rotate a single page table, example in appendix.
-                                % For landscape tables, see the longtable examples.
-\usepackage{placeins}           % useful with \FloatBarrier, to keep 
-                                % onecolumn floats from drifting to the next section
+\usepackage{subcaption}
+\usepackage{siunitx}
+
+\usepackage{lscape}
+
+\usepackage{placeins}
+
 
 \DeclareSIUnit{\angstrom}{\text{\AA}}
-                                
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%\usepackage[options]{hyperref}
-% To add links in your PDF file, use the package "hyperref"
-% with options according to your LaTeX or PDFLaTeX drivers.
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
 \begin{document}
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% if you use custom commands in your title,
-% ensure to check your title when submitting!
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \title{On the rotation curve of UGC9039: a more sober reanalysis}
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% Please separate each author with the \and command
-%
-% Use the \corrauth to provide the corresponding
-% author address. It will be automatically inserted as 
-% footnote in the PDF output.
-%
-% Please DO NOT include ORCIDs next to author names.
-% Instead, please provide an active address for each coauthor:
-% it will be automatically extracted by EDPS editorial system, 
-% and co-authors will be be able to authenticate their ORCID.
-%
-% Only authenticated ORCIDs will be taken into account.
-% ORCIDs included here will be removed.
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
    \author{J. Fraustro}
 
    \institute{Space Telescope Science Institute, Baltimore, Maryland
    \\\email{jfraustro@stsci.edu}
    }
-   
+
 
    \date{\today}
 
@@ -73,7 +29,7 @@
   % === Context ===
    {The original analysis of these data, presented in \citet{fraustro} as a final project for AST5765C at the University of Central Florida, reached an inconclusive result regarding the structure of UGC 9039 and the presence of dark matter within. In the intervening years, the present author has continued to think about the dataset with a frequency that, on reflection, is difficult to justify. The original analysis is now revisited under significantly more luxurious time constraints than the 48-hour window in which it was first attempted, and in a state of significantly improved sobriety.}
     % === Aims ===
-   {We aim to recover the rotation curve of UGC 9039, demonstrate the presence of dark matter of quantifiable significance, and address the methodological errors that prevented the original work from doing either.} 
+   {We aim to recover the rotation curve of UGC 9039, demonstrate the presence of dark matter of quantifiable significance, and address the methodological errors that prevented the original work from doing either.}
     % === Methods ===
    {Using the bias-subtracted, flat-fielded calibration products from the original reduction, we reconstruct the full analysis pipeline downstream of the basic CCD corrections. The principal sources of error in \citet{fraustro} are identified and corrected: (i) the cross-correlation routine, which previously discarded sub-pixel information by taking the integer argmax of the correlation function, is replaced with one that interpolates onto a 10× finer grid and fits a Gaussian to the correlation peak, recovering shifts to $\approx 10^{-3}$ pixel precision; (ii) the Doppler velocity formula, which previously computed $c(1 + \Delta\lambda/\lambda)$ rather than $c\Delta\lambda/\lambda$, is corrected, eliminating the spurious $\approx3×10^{8}$ m/s offset; (iii) full error propagation is performed throughout, an exercise omitted from the original work. Sky subtraction is improved by shifting the background spectrum to account for the optical distortion of the Double Spectrograph at each slit position.}
   % === Results ===
@@ -102,7 +58,7 @@
     This work re-implements the analysis pipeline downstream of the bias and flat-field corrections, retaining the original calibration products. The corrections to the cross-correlation routine and the Doppler formula rectify the signal into a smooth, sub-pixel-resolved rotation curve. With proper error propagation, the dark matter content of UGC 9039 is then recovered.
 
     It is noted that the present author has had occasion, in the 7 years since \cite{fraustro}, to develop an appreciation for reading one's own code carefully, and allowing proper time when approaching problems.
-    
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Methods}
 
@@ -185,7 +141,7 @@
     The derivation of this equation is left as an exercise to the reader\footnote{See Harrington's AST5765C lecture handout, Chap.7 Sec.7 Error Propagation Equation}.
 
     The velocity uncertainty $\sigma_v=13.75\,\text{km}\,\text{s}^{-1}$ is the dominant term at all measured radii. The radius uncertainty $\sigma_r=0.171\,\text{kpc}$ contributes negligibly by comparison, as the stripe positional uncertainty is small relative to the physical scale of the galaxy. The resulting mass uncertainties are shown overplotted on the enclosed mass profile in Fig.~\ref{fig:mass_errors}.
-    
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Results}
 \subsection{Stripe Reduction and Reference Spectrum}\label{res_stripes}
@@ -241,7 +197,7 @@ To isolate the dark matter component, the dynamically inferred enclosed mass was
 
 In the outer 25\% of the measured radial extent, the dynamical mass exceeds the luminous mass profile by $(2.37 \pm 0.12) \times 10^{11}\,M_\odot$, corresponding to a dark matter fraction of 92.8\% at large radius. The detection significance is $20.0\sigma$. The mass comparison is shown in Fig.~\ref{fig:mass_comparison}.
 
-The flat rotation curve at large radius seen in Fig.~\ref{fig:velocity_fit},the feature that \citet{fraustro} correctly identified as suggestive of non-Keplerian dynamics, but could not quantify, is now resolved at sub-pixel precision and confirmed at high significance. 
+The flat rotation curve at large radius seen in Fig.~\ref{fig:velocity_fit},the feature that \citet{fraustro} correctly identified as suggestive of non-Keplerian dynamics, but could not quantify, is now resolved at sub-pixel precision and confirmed at high significance.
 
 The conclusion that \citet{fraustro} declined to state definitively, citing the absence of error analysis, is here stated: UGC 9039 contains dark matter.
 
@@ -283,7 +239,7 @@ The author thanks Dr. J. Harrington -- Joe -- for the original assignment, the p
 \begin{thebibliography}{}
 
     \bibitem[Fraustro(2019)]{fraustro} Fraustro, J. 2019,
-      Radial Velocity And Dark Matter Analysis of Spiral Galaxy UGC 9039 
+      Radial Velocity And Dark Matter Analysis of Spiral Galaxy UGC 9039
 
     \bibitem[Catinella et al.(2005)]{catinella}
 Catinella, B., Haynes, M. P., \& Giovanelli, R. 2005, AJ, 130, 1037
